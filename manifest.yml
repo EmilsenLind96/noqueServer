@@ -1,10 +1,9 @@
 applications:
-- name: Kitura-Starter
+- path: .
   memory: 256M
   instances: 1
-  random-route: true
+  domain: eu-gb.mybluemix.net
+  name: noque
+  host: noque
   disk_quota: 1024M
-  command: Kitura-Starter
-  buildpack: swift_buildpack
-  #health-check-type: http
-  #health-check-http-endpoint: /health
+  command: noque-server

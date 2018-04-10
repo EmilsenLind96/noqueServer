@@ -20,27 +20,28 @@
 import PackageDescription
 
 let package = Package(
-    name: "KituraStarter",
+    name: "noque-server",
     products: [
       .executable(
-        name: "Kitura-Starter",
-        targets:  ["Kitura-Starter", "Controller"]
+        name: "noque-server",
+        targets:  ["noque-server", "Controller"]
       )
     ],
     dependencies: [
       .package(url: "https://github.com/IBM-Swift/Kitura.git", .upToNextMinor(from: "2.1.0")),
       .package(url: "https://github.com/IBM-Swift/HeliumLogger.git", .upToNextMajor(from: "1.7.1")),
       .package(url: "https://github.com/IBM-Swift/CloudEnvironment.git", .upToNextMajor(from: "6.0.0")),
-      .package(url: "https://github.com/IBM-Swift/Health.git", .upToNextMajor(from: "1.0.0"))
+      .package(url: "https://github.com/IBM-Swift/Health.git", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/IBM-Swift/Kitura-WebSocket.git", .upToNextMajor(from: "1.0.0"))
     ],
     targets: [
       .target(
-        name: "Kitura-Starter",
+        name: "noque-server",
         dependencies: ["Kitura", "HeliumLogger", "Controller"]
       ),
       .target(
         name: "Controller",
-        dependencies: ["Kitura", "CloudEnvironment", "Health"]
+        dependencies: ["Kitura", "CloudEnvironment", "Health", "Kitura-WebSocket"]
       ),
       .testTarget(
         name: "ControllerTests",

@@ -25,6 +25,7 @@ HeliumLogger.use(LoggerMessageType.info)
 
 // Create Controller
 let controller = Controller()
+let orderController = OrderController(router: controller.router)
 Log.info("Server will be started on '\(controller.url)'.")
 
 // Condifure Kitura

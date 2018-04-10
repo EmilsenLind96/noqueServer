@@ -16,23 +16,23 @@
 
 # Builds a Docker image with all the dependencies for compiling and running the Kitura-Starter sample application.
 
-FROM ibmcom/swift-ubuntu:4.0.2
+FROM ibmcom/swift-ubuntu:4.0.3
 MAINTAINER IBM Swift Engineering at IBM Cloud
-LABEL Description="Docker image for building and running the Kitura-Starter sample application."
+LABEL Description="Docker image for building and running noque-server"
 
 # Expose default port for Kitura
 EXPOSE 8080
 
-RUN mkdir /Kitura-Starter
+RUN mkdir /server
 
-ADD Sources /Kitura-Starter/Sources
-ADD Tests /Kitura-Starter/Tests
-ADD public /Kitura-Starter/public
-ADD Package.swift /Kitura-Starter
-ADD Package.resolved /Kitura-Starter
-ADD LICENSE /Kitura-Starter
-ADD .swift-version /Kitura-Starter
-RUN cd /Kitura-Starter && swift build
+ADD Sources /server/Sources
+ADD Tests /server/Tests
+ADD public /server/public
+ADD Package.swift /server
+ADD Package.resolved /server
+ADD LICENSE /server
+ADD .swift-version /server
+RUN cd /server && swift build
 
-#CMD ["/Kitura-Starter/.build/debug/Kitura-Starter"]
-CMD [ "sh", "-c", "cd /Kitura-Starter && .build/x86_64-unknown-linux/debug/Kitura-Starter" ]
+#CMD ["/server/.build/debug/noque-server"]
+CMD [ "sh", "-c", "cd /server && ./.build/x86_64-unknown-linux/release/noque-server" ]
