@@ -27,7 +27,8 @@ class VenueService: WebSocketService {
     
     public func connected(connection: WebSocketConnection) {
         for header in connection.request.headers {
-            if header.key == "venueID" {
+            if header.key.lowercased() == "x-venueID".lowercased() {
+                Log.info("\(header.value[0]) connected")
                 let venueID = header.value[0]
                 if let venueDetail = venueDetails.first(where: {$0.id == venueID}) {
                     venueDetail.addClient(ConnectedClient(connectionID: connection.id))
@@ -54,7 +55,7 @@ class VenueService: WebSocketService {
     
     public func received(message: Data, from: WebSocketConnection) {
         for header in from.request.headers {
-            if header.key == "venueID" {
+            if header.key.lowercased() == "x-venueID".lowercased() {
                 let venueID = header.value[0]
                 do {
                     let updateableOrder = try JSONDecoder().decode(UpdatableOrder.self, from: message)
@@ -76,10 +77,14 @@ class VenueService: WebSocketService {
 extension VenueService {
     public func createUniqueOrderID(forVenue venueID: String) throws -> String {
         guard let venueIndex = venueDetails.index(where: {$0.id == venueID}) else {
-            throw ServerErrorStruct(statusCode: .serviceUnavailable, localizedDescription: "The venue could not be found, maybe it is no longer taking orders?")
+            throw ServerErrorStruct(statusCode: .serviceUnavailable, localizedDescription: "Det lader til at stedet er holdt op med at tage imod bestillinger lige nu :(")
         }
         let venue = venueDetails[venueIndex]
-        return venue.getNewOrderId()
+        if venue.isRecievingOrders {
+            return venue.getNewOrderId()
+        } else {
+            throw ServerErrorStruct(statusCode: .serviceUnavailable, localizedDescription: "Det lader til at stedet er holdt op med at tage imod bestillinger lige nu :(")
+        }
     }
     
     public func notifyVenue(_ venueID: String, withNew order: Order) {

@@ -14,9 +14,9 @@ enum CategoryType: Int, Codable {
 }
 
 struct Category: Codable {
-    public private(set) var categoryName: String
     public private(set) var categoryID: String
-    public private(set) var iconName: String?
+    public private(set) var categoryName: String
     public private(set) var categoryType: CategoryType
+    public private(set) var iconName: String
 }
 

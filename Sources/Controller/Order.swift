@@ -38,10 +38,11 @@ enum PaymentMethod: Int, Codable {
 }
 
 class Order: Codable {
-    
     // This ID is generated server-side
     public private(set) var id: String
-    // This is the total pay, that has been payed - or should be paid, depending on the PaymentMethod.
+    public private(set) var venueID: String
+    
+    // This is the total pay, that has been payed - or should be paid, depending on the PaymentMethod. This is including an optional discount
     public private(set) var totalPrice: Double
     // This is the tips given by the client on the order. Can be optional.
     public private(set) var tips: Double?
@@ -50,17 +51,17 @@ class Order: Codable {
     // The deliveryMethod
     public private(set) var deliveryMethod: DeliveryMethod
     // The products that has been ordered
-    public private(set) var orders: [Product]
-    
-    public var venueId: String?
+    public private(set) var purchasedProducts: [PurchasedProduct]
     
     public private(set) var comments: String?
-    // If the name of the customer is provided, it will be noted on the order both for the venue and client.
-    public private(set) var customerName: String?
+    
+    public private(set) var deviceID: String?
+    
+    public private(set) var discountCoupon: DiscountCoupon?
     // This option is mostly for venues where their staff are the ones taking the order, and their name will then be attached to every order they take
     public private(set) var takenBy: String?
     
-    public private(set) var date: String
+    public private(set) var date: Date
     
     // The order status, when sent by the client the status is .Placed, indicating that the order has not yet been processed by the backend. It is up to the backend to adjust the value according to the updates given by the local venue client
     public var status: OrderStatus

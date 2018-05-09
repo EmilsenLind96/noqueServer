@@ -41,7 +41,7 @@ public class ClientService: WebSocketService{
     
     public func connected(connection: WebSocketConnection) {
         for header in connection.request.headers {
-            if header.key == "orderID" {
+            if header.key.lowercased() == "x-orderID".lowercased() {
                 let orderID = header.value[0]
                 clientConnections[orderID] = connection
                 return
@@ -56,19 +56,46 @@ public class ClientService: WebSocketService{
             return
         }
         clientConnections.removeValue(forKey: clientConnection.key)
+        Log.info("client with clientID \(connection.id) disconnected")
     }
     
     public func received(message: Data, from: WebSocketConnection) {
         Log.info("something happened")
     }
     public func received(message: String, from: WebSocketConnection) {
-        Log.info("something happened")
+        clientConnections[message] = from
     }
     
 
-    public func notifyClient(updatableOrder: UpdatableOrder) {
+    public func notifyClient(withDeviceID: String?, updatableOrder: UpdatableOrder) {
         guard let listeningClient = clientConnections[updatableOrder.id] else {
-            Log.info("Should do push to clients subscribed to this orderID"); return
+            guard let deviceID = withDeviceID else {
+                Log.info("Can't do push to client, as he provided no deviceID, perhaps it should check if the user registers to the order at a later stage?"); return
+            }
+            let orderStatus: String
+            // TODO:: DO push to client
+            switch updatableOrder.status {
+            case .Handled:
+                orderStatus = "Færdig"
+            case .Preparing:
+                orderStatus = "Forbereder"
+            case .AwaitingPickup:
+                orderStatus = "Klar til afhentning"
+            case .AwaitingDelivery:
+                orderStatus = "Klar til levering"
+            case .AwaitingPayment:
+                orderStatus = "Mangler betaling"
+            default:
+                return
+            }
+            PushNotifications.sendMessage(withMessage: "Your order with id: \(updatableOrder.id) has changed status to \(orderStatus)", target: .init(deviceIds: [deviceID]), payload: ["id": updatableOrder.id, "status": updatableOrder.status.rawValue]) { (response) in
+                Log.info("Status code: \(response.statusCode)")
+                Log.info("Tried to send push message")
+                guard let data = response.data else {return}
+                Log.info(data.description)
+            }
+            Log.error("wtf")
+            return
         }
         do {
             let data = try JSONEncoder().encode(updatableOrder)
@@ -78,5 +105,5 @@ public class ClientService: WebSocketService{
         }
     }
         
-        
+    
 }

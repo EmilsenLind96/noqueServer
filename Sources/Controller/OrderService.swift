@@ -27,11 +27,19 @@ public class OrderService {
     
     
         func changeInOrderStatus(byVenue venueID: String, order: UpdatableOrder) {
-            guard let orders = orders[venueID] else {Log.error("Could not find any orders for the venue, that requested an update to an order"); return}
-            guard let updatableOrder = orders.first(where: {$0.id == order.id}) else {Log.error("Could not find the order that needed to be updated"); return}
-            updatableOrder.status = order.status
+            guard let index = orders[venueID]?.index(where: {$0.id == order.id}) else {Log.error("Could not find any orders for the venue, that requested an update to an order"); return}
+            let updatableOrder = orders[venueID]![index]
             
-            ClientService.instance.notifyClient(updatableOrder: order)
+            ClientService.instance.notifyClient(withDeviceID: updatableOrder.deviceID, updatableOrder: order)
+            
+            switch order.status {
+            case .Handled:
+                execute {
+                    orders[venueID]?.remove(at: index)
+                }
+            default:
+                updatableOrder.status = order.status
+            }
 }
 }
         

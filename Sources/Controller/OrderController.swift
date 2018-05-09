@@ -19,7 +19,8 @@ public class OrderController {
         router.all("api/v1/order/new/*", middleware: BodyParser())
         router.all("api/v1/order/new/", handler: [handleNewOrder])
         router.all("api/v1/order/new/:venueID", handler: [handlePostNewOrder])
-        router.all("api/v1/order/:venueID", handler: [handleGetOrder, handlePostOrder])
+    router.all("api/v1/order/:venueID", handler: [handleGetOrder, handlePostOrder])
+//    router.all("api/v1/order/status:venueID", handler: )
     
         WebSocket.register(service: ClientService.instance, onPath: "client")
         WebSocket.register(service: VenueService.instance, onPath: "venue")
@@ -98,10 +99,15 @@ public class OrderController {
         if (request.method) != .get {
             next()
         } else {
-            let venueID = request.parameters["venueID"]!
             do {
+            let venueID = request.parameters["venueID"]!
+            if let orderID = getOrderID(fromRequest: request) {
+                let order = try getOrder(withID: orderID, venueID: venueID)
+                try response.status(.OK).send(order).end()
+            } else {
                 let venueOrders = try getAllOrders(forVenue: venueID)
                 try response.status(.OK).send(venueOrders).end()
+            }
             } catch let error as ServerErrorStruct {
                 try? response.status(error.statusCode).send(error.localizedDescription).end()
                 return
@@ -120,9 +126,9 @@ public class OrderController {
             let venueID = request.parameters["venueID"]!
             do {
                 let order = try createOrderObject(fromRequest: request)
-                order.status = OrderStatus.Accepted
                 postNewOrder(order: order, forVenue: venueID)
-                try response.status(.OK).send(order).end()
+                let updatableOrder = UpdatableOrder(id: order.id, status: OrderStatus.Accepted)
+                try response.status(.OK).send(updatableOrder).end()
             } catch let error as ServerErrorStruct {
                 try? response.status(error.statusCode).send(error.localizedDescription).end()
             } catch {
@@ -141,6 +147,11 @@ extension OrderController {
             throw ServerErrorStruct(statusCode: .noContent, localizedDescription: "There were no orders not completed for this venue")
         }
         return venueOrders
+    }
+    
+    private func getOrder(withID id: String, venueID: String) throws -> Order {
+        guard let order = OrderService.instance.orders[venueID]?.first(where: {$0.id == id}) else {throw ServerErrorStruct(statusCode: .noContent, localizedDescription: "Could not find the specific order")}
+        return order
     }
 
     private func createOrderObject(fromRequest request: RouterRequest) throws -> Order {
@@ -170,6 +181,7 @@ extension OrderController {
         guard let rawValue = request.queryParameters["paymentMethod"] else {
             throw ServerErrorStruct(statusCode: .badRequest, localizedDescription: "There were no paymentMethod parameter found in the URL. Use: api/v1/order/new/:venueID?paymentMethod=INTEGER")
         }
+        
 
         guard let int = Int(rawValue) else {
             throw ServerErrorStruct(statusCode: .badRequest, localizedDescription: "There were a paymentMethod parameter found in the URL, but it did not contain an integer, which is the the required value")
@@ -179,6 +191,14 @@ extension OrderController {
             throw ServerErrorStruct(statusCode: .badRequest, localizedDescription: "A PaymentMethod object could not be created from integer: \(rawValue), try with a value that fits the model")
         }
         return paymentMethod
+    }
+    
+    private func getOrderID(fromRequest request: RouterRequest) -> String? {
+        if let orderID = request.queryParameters["orderID"] {
+            return orderID
+        } else {
+            return nil
+        }
     }
 
     private func getJSONBody(fromRequest request: RouterRequest) throws -> [String:Any] {

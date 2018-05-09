@@ -83,7 +83,7 @@ extension Stripe {
             request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             request.httpBody = data
-            URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) in
+            let task = URLSession(configuration: URLSessionConfiguration.default).dataTask(with: request) { (data, response, error) in
                 guard error == nil else {
                     completion(ServerErrorStruct.init(statusCode: .internalServerError, localizedDescription: error!.localizedDescription), nil)
                     return
@@ -105,7 +105,8 @@ extension Stripe {
                         completion(ServerErrorStruct.init(statusCode: .internalServerError, localizedDescription: error.localizedDescription), nil)
                     }
                 }
-            }).resume()
+            }
+            task.resume()
         }
     }
 }
